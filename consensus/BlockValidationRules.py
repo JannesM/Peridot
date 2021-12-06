@@ -10,7 +10,7 @@ def genesis() -> Block:
     Returns an empty block
     """
 
-    return Block(0, None, [], [])
+    return Block(0, "Peridot Genesis", [], [])
 
 def chronologicalConsensus(block: Block, prevBlock: Block) -> bool:
     """Function that describes the chronological consensus of the blockchain
@@ -61,11 +61,11 @@ def blockConsensus(block: Block) -> bool:
         return False
 
     # stake consensus
-    if len(block.stake) == 0:
+    if len(block.stake) == 0 and block.height != 0:
         return False
 
     # transaction consensus
-    if len(block.transactions) == 0:
+    if len(block.transactions) == 0 and block.height != 0:
         return False
 
     return True
