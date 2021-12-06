@@ -38,4 +38,4 @@ class Block:
         
         # TODO: adding stake and transactions to hashStr definition
         hashStr = str(self.height) + str(self.timestamp) + self.prevHash
-        return hashlib.sha256(hashStr).hexdigest()
+        return hashlib.sha256(hashStr.encode('utf-8')).hexdigest()
