@@ -49,10 +49,11 @@ def generate_keys():
     # print("Verify key     :", verifying_key.to_string().hex())
     # print("Nested address :", nested_address.decode())
 
-    return private_key.hex(), public_key.hex(), nested_address.decode()
+    # return private_key.hex(), public_key.hex(), nested_address.decode()
+    return private_key, public_key, nested_address
 
 
-def sign(sk: str, hash: str):
+def sign(sk: bytes, hash: bytes):
     """Function to sign a hash (str) with an elliptic curve private key
 
     Args:
@@ -64,8 +65,8 @@ def sign(sk: str, hash: str):
     """
 
     try:
-        signing_key = ecdsa.SigningKey.from_string(bytes.fromhex(sk), curve=ecdsa.SECP256k1)
-        signature = signing_key.sign_deterministic(bytes.fromhex(hash))
+        signing_key = ecdsa.SigningKey.from_string(sk, curve=ecdsa.SECP256k1)
+        signature = signing_key.sign_deterministic(hash)
 
         return signature.hex()
 
@@ -73,7 +74,7 @@ def sign(sk: str, hash: str):
         return None
 
 
-def verify_sig(pk: str, hash: str, sig: str):
+def verify_sig(pk: bytes, hash: bytes, sig: bytes):
     """Function to verify an elliptic curve signature
 
     Args:
@@ -86,14 +87,14 @@ def verify_sig(pk: str, hash: str, sig: str):
     """
 
     try:
-        verifying_key = ecdsa.VerifyingKey.from_string(bytes.fromhex(pk), curve=ecdsa.SECP256k1)
-        return verifying_key.verify(bytes.fromhex(sig), bytes.fromhex(hash))
+        verifying_key = ecdsa.VerifyingKey.from_string(pk, curve=ecdsa.SECP256k1)
+        return verifying_key.verify(sig, hash)
 
     except (ecdsa.util.MalformedSignature, ecdsa.keys.BadSignatureError):
         return False
 
 
-def pk_to_address(pk: str):
+def pk_to_address(pk: bytes):
     """Function to translate a ECDSA public key to a nested address
 
     Args:
@@ -103,7 +104,7 @@ def pk_to_address(pk: str):
         nested addres (decoded): the corresponding address
     """
 
-    sha256_key = SHA256.new(bytes.fromhex(pk))
+    sha256_key = SHA256.new(pk)
     ripemd160_key = RIPEMD160.new(sha256_key.digest())
 
     public_key_hash = ripemd160_key.digest()
@@ -122,7 +123,7 @@ def pk_to_address(pk: str):
     return base58.b58encode(bin_addr).decode()
 
 
-def verify_relation(pk: str, address: str, sig: str, hash: str):
+def verify_relation(pk: bytes, address: bytes, sig: bytes, hash: bytes):
     """Function that verifies the relation between an ECDSA public key, an ECDSA address and an ECDSA signature
 
     Args:
