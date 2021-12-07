@@ -19,11 +19,13 @@ sk, pk, addr = Cipher.generate_keys()
 ip = '127.0.0.1'
 port = random.randint(10000, 10099)
 node = Node(ip, port, sk, pk)
+node.setDaemon(True)
+node.start()
 
 if '--other' in sys.argv:
     try:
         port = int(sys.argv[sys.argv.index('--other') + 1])
-        node.request_creadentails((ip, port))
+        node.send_creadentails((ip, port))
         time.sleep(1)
         
     except IndexError:
@@ -36,6 +38,6 @@ try:
 
 except KeyboardInterrupt:
     print("Got interrupt signal!")
-    node.stop()
+    node.join(1)
     print("Good bye!")
     
