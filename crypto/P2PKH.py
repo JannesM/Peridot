@@ -5,12 +5,12 @@ from Crypto.Hash import RIPEMD160, SHA256
 import base58
 
 
-def generate_keys():
+def generate_keys() -> tuple[bytes, bytes, bytes]:
     """Function to generate an elliptic curve keypair.
 
     Returns:
-        sk (hex): ECDSA private key
-        pk (hex): ECDSA public key
+        sk: ECDSA private key
+        pk: ECDSA public key
         address (decoded): nested address
     """
 
@@ -50,37 +50,37 @@ def generate_keys():
     # print("Nested address :", nested_address.decode())
 
     # return private_key.hex(), public_key.hex(), nested_address.decode()
-    return private_key, public_key, nested_address
+    return (private_key, public_key, nested_address)
 
 
-def sign(sk: bytes, hash: bytes):
+def sign(sk: bytes, hash: bytes) -> bytes:
     """Function to sign a hash (str) with an elliptic curve private key
 
     Args:
-        sk (hex): ECDSA private key
-        hash (hex): hash to sign
+        sk: ECDSA private key
+        hash: hash to sign
 
     Returns:
-        signature (hex): the corrsponding ECDSA signature
+        signature: the corrsponding ECDSA signature
     """
 
     try:
         signing_key = ecdsa.SigningKey.from_string(sk, curve=ecdsa.SECP256k1)
         signature = signing_key.sign_deterministic(hash)
 
-        return signature.hex()
+        return signature
 
     except MalformedPointError:
         return None
 
 
-def verify_sig(pk: bytes, hash: bytes, sig: bytes):
+def verify_sig(pk: bytes, hash: bytes, sig: bytes) -> bool:
     """Function to verify an elliptic curve signature
 
     Args:
-        pk (hex): ECDSA public key
-        hash (hex): previous signed hash
-        sig (hex): ECDSA signature
+        pk: ECDSA public key
+        hash: previous signed hash
+        sig: ECDSA signature
 
     Returns:
         falg (boolean): result of the verification
@@ -94,14 +94,14 @@ def verify_sig(pk: bytes, hash: bytes, sig: bytes):
         return False
 
 
-def pk_to_address(pk: bytes):
+def pk_to_address(pk: bytes) -> bytes:
     """Function to translate a ECDSA public key to a nested address
 
     Args:
-        pk (hex): ECDSA public key
+        pk: ECDSA public key
 
     Returns:
-        nested addres (decoded): the corresponding address
+        nested addres: the corresponding address
     """
 
     sha256_key = SHA256.new(pk)
@@ -120,10 +120,10 @@ def pk_to_address(pk: bytes):
     checksum = SHA256.new(SHA256.new(flagged_script_hash).digest()).digest()[:4]
 
     bin_addr = flagged_script_hash + checksum
-    return base58.b58encode(bin_addr).decode()
+    return base58.b58encode(bin_addr)
 
 
-def verify_relation(pk: bytes, address: bytes, sig: bytes, hash: bytes):
+def verify_relation(pk: bytes, address: bytes, sig: bytes, hash: bytes) -> bool:
     """Function that verifies the relation between an ECDSA public key, an ECDSA address and an ECDSA signature
 
     Args:
