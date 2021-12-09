@@ -11,31 +11,43 @@ class Block:
     """
     
     # header
-    height = 0
-    timestamp = time.time()
-    prevHash = ""
-    hash = ""
-
-    # stake
-    stake = [] # referring to primitives/Value
+    height: int
+    timestamp: float
+    prevHash: bytes
+    merkle_root: bytes
+    nonce: int
+    hash: bytes
 
     # transactions
     transactions: list[Transaction] = [] # referring to primitives/Transaction
     
-    def __init__(self, height, prevHash, stake, transactions) -> None:
+    def __init__(self, height, prevHash, transactions) -> None:
         self.height = height
+        self.timestamp = time.time()
         self.prevHash = prevHash
-        self.stake = stake
         self.transactions = transactions
-        self.hash = self.calculateHash()
+        self.nonce = 0
 
-    def calculateHash(self) -> str:
-        """Function that summarizes the block and compute its hash
+        self.merkle_root = self.calculate_merkle_root()
+        self.hash = self.calculate_hash()
 
-        Returns:
-            hash (hex): the sha256 hash of the block
+    def calculate_merkle_root(self) -> bytes:
+        """Function that reduces all transactions within this block down to a single hash value
+
+        Returns the sha256 representation of all transactions within this block
         """
         
-        # TODO: adding stake and transactions to hashStr definition
-        hashStr = str(self.height) + str(self.timestamp) + self.prevHash
-        return hashlib.sha256(hashStr.encode('utf-8')).hexdigest()
+        buffer = bytes()
+        for x in self.transactions:
+            buffer += x.hash
+
+        return hashlib.sha256(buffer).digest()
+
+    def calculate_hash(self) -> bytes:
+        """Function that summarizes the block and compute its hash
+
+        Returns the sha256 representation from this block
+        """
+    
+        hashStr = str(self.height).encode('utf-8') + str(self.timestamp).encode('utf-8') + str(self.nonce).encode('utf-8') + self.merkle_root + self.prevHash
+        return hashlib.sha256(hashStr).digest()

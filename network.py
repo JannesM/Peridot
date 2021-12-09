@@ -7,16 +7,20 @@ import socket
 import threading
 import hashlib
 import crypto.P2PKH as Cipher
+from mempool import PendingTransactions
 
 class Node(threading.Thread):
     
     sock: socket.socket
     peers = dict()
+    node_addr: tuple[str, int]
 
     tListener: threading.Thread
 
     sk: bytes
     pk: bytes
+
+    pool: PendingTransactions
 
     # network general
     flag_accepted = b'\xa1'
@@ -24,7 +28,6 @@ class Node(threading.Thread):
 
     flag_discovered_peer = b'\xe0'
     flag_pk_request = b'\xf1'
-    flag_pk_response = b'\xf2'
 
     # consensus
     flag_data_transmission = b'\xe1'
@@ -33,15 +36,16 @@ class Node(threading.Thread):
     flag_precommit_valid = b'\xe4'
     flag_precommit_nil = b'\xe5'
 
-    def __init__(self, ip, port, sk, pk) -> None:
+    def __init__(self, ip, port, sk, pk, pool) -> None:
         threading.Thread.__init__(self)
 
         self.sk = sk
         self.pk = pk
+        self.pool = pool
 
-        # node_address = ('0.0.0.0', random.randint(10000, 10099))
+        self.node_addr = (ip, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((ip, port))
+        self.sock.bind(self.node_addr)
 
         print(f'Started node on {ip}:{port}')
 
@@ -148,7 +152,25 @@ class Node(threading.Thread):
                     if flag == self.flag_discovered_peer:
                         ip, port = content.decode().split(':')
                         uAddr = (ip, int(port))
-                        print(addr, 'says that new peer appeared:', uAddr)
+                        # print(addr, 'says that new peer appeared:', uAddr)
 
-                        self.send_creadentails(uAddr)
+                        if uAddr != self.node_addr:        
+                            self.send_creadentails(uAddr)
+
+                    
+                    # receiving transactions and blocks
+                    elif flag == self.flag_data_transmission:
+                        pass
+
+                    # # prevote (needs 2/3 of all peers)
+                    # elif flag == self.flag_prevote_nil:
+                    #     pass
+                    # elif flag == self.flag_prevote_valid:
+                    #     pass
+
+                    # # precommit (needs 2/3 of all peers)
+                    # elif flag == self.flag_precommit_nil:
+                    #     pass
+                    # elif flag == self.flag_precommit_valid:
+                    #     pass
                             

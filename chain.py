@@ -14,7 +14,8 @@ class Blockchain:
     chain: list[Block] = []
 
     def __init__(self) -> None:
-        self.chain.append(BlockValidator.genesis())
+        #self.chain.append(BlockValidator.genesis())
+        pass
 
 
     def locateTxOutput(self, height, hash, index) -> Transaction:

@@ -4,14 +4,6 @@
 
 from primitives.Block import Block
 
-def genesis() -> Block:
-    """Initial function that defines the genesis block
-
-    Returns an empty block
-    """
-
-    return Block(0, "Peridot Genesis", [], [])
-
 def chronologicalConsensus(block: Block, prevBlock: Block) -> bool:
     """Function that describes the chronological consensus of the blockchain
 
@@ -21,6 +13,9 @@ def chronologicalConsensus(block: Block, prevBlock: Block) -> bool:
 
     Returns true if chronological consensus is comprehensible
     """
+
+    if block.height == 0 and prevBlock is None:
+        return True
 
     if (block.height == prevBlock.height + 1) and (block.timestamp > prevBlock.timestamp):
         return True
@@ -50,22 +45,50 @@ def blockConsensus(block: Block) -> bool:
 
     Returns true if the blocks consensus is comprehensible
     """
-
-    # TODO: add consensus rules for stake and transactions
+    # validating completeness
+    if block.height == 0:
+        if not block.hash or not block.timestamp:
+            print('[Validation] Genesis is missing some attributs!')
+            return False    
+    else:        
+        if not block.hash or not block.prevHash or not block.timestamp:
+            print('[Validation] Block is missing some attributs!')
+            return False
     
-    # hash consensus
-    if not block.hash:
+    if len(block.transactions) == 0:
+        print('[Validation] Block has no transactions!')
         return False
 
-    if block.hash != block.calculateHash():
+    # comparing hashes
+    if block.hash != block.calculate_hash():
+        print('[Validation] Block has wrong hash!')
         return False
 
-    # stake consensus
-    if len(block.stake) == 0 and block.height != 0:
+    if block.merkle_root != block.calculate_merkle_root():
+        print('[Validation] Block has wrong merkle root!')
         return False
 
-    # transaction consensus
-    if len(block.transactions) == 0 and block.height != 0:
+
+    # verify proof of work
+    difficulty = 3
+    if not block.hash.hex()[:difficulty] != ''.join(str(0) for _ in range(difficulty)):
+        print('[Validation] Blocks PoW failed!')
         return False
 
     return True
+
+def blockReward(block: Block):
+    """Factor to determ the reward of a block
+
+    Args:
+        block (Block): [description]
+
+    Returns:
+        [type]: [description]
+    """
+
+    initial_value = 50.0
+    limit = 100000
+
+    factor = (block.height / limit) + (1-((block.height % limit) / limit))
+    return initial_value / factor
